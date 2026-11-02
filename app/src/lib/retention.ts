@@ -351,6 +351,24 @@ export async function proposeSave(subId: string, reason: CancelReason, reasonTex
   return recordOffer(s, "merchant_cancel", d, { reason: reasonText ? `${reason}: ${reasonText}` : reason });
 }
 
+/**
+ * The member chose "cancel without an offer" on the cancel page: no engine call, no offer shown.
+ * Recorded as a let_go so the merchant still sees the cancel (and the reason, if given).
+ */
+export async function cancelWithoutOffer(subId: string, reason?: CancelReason, reasonText?: string): Promise<AcceptResult & { offerId?: string }> {
+  const s = await getSub(subId);
+  if (!s) return { state: "error", detail: "unknown subscription" };
+  const db = await getDb();
+  await db.update(offers).set({ status: "declined", resolvedAt: new Date() })
+    .where(and(eq(offers.subscriptionId, subId), eq(offers.trigger, "merchant_cancel"), eq(offers.status, "proposed")));
+  const off = await recordOffer(s, "merchant_cancel", {
+    kind: "let_go", headline: "Cancelled without an offer", message: "The member chose to cancel straight away, so no offer was shown.",
+    rationale: "Member skipped the save offer and cancelled directly.", engine: "none (member skipped the offer)",
+  }, { reason: reason ? (reasonText ? `${reason}: ${reasonText}` : reason) : "skipped" });
+  const r = await declineOffer(off.id);
+  return { ...r, offerId: off.id };
+}
+
 export type AcceptResult = { state: "saved" | "pending_consent" | "lost" | "error"; approveUrl?: string; detail: string };
 
 export async function acceptOffer(offerId: string): Promise<AcceptResult> {

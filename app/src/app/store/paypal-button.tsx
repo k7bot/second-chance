@@ -42,9 +42,9 @@ export function PayPalSubscribe({ clientId, planId, label = "subscribe" }: { cli
   }, [clientId, planId, label, router]);
   return (
     <div>
-      {state === "loading" && <div className="h-[45px] animate-pulse rounded-full bg-amber-100" />}
-      {state === "error" && <p className="rounded-xl bg-rose-50 p-3 text-sm text-rose-700">PayPal couldn&apos;t load. Check your connection and refresh.</p>}
-      {state === "done" && <p className="rounded-xl bg-emerald-50 p-3 text-sm text-emerald-700">Subscribed! Setting up your membership…</p>}
+      {state === "loading" && <div role="status" aria-label="Loading PayPal checkout" className="shimmer h-[45px] rounded-full" />}
+      {state === "error" && <p role="alert" className="rounded-xl bg-rose-50 p-3 text-sm text-rose-800 ring-1 ring-rose-100">PayPal checkout didn&apos;t load. Check your connection, then refresh the page to try again.</p>}
+      {state === "done" && <p role="status" className="flex items-center gap-2 rounded-xl bg-emerald-50 p-3 text-sm text-emerald-800 ring-1 ring-emerald-100"><span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-r-transparent" /> Subscribed! Setting up your membership…</p>}
       <div ref={ref} className={state === "done" ? "hidden" : ""} />
     </div>
   );

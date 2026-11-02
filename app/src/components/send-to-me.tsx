@@ -21,7 +21,7 @@ export function SendToMe({ offerId, outboxId, tone = "store", label = "Email thi
   );
   if (!open) return (
     <button type="button" onClick={() => setOpen(true)}
-      className={clsx("inline-flex items-center gap-1.5 self-center text-sm font-medium underline-offset-4 hover:underline", store ? "text-[#8a7868] hover:text-[#2a2018]" : "text-muted hover:text-ink")}>
+      className={clsx("inline-flex items-center gap-1.5 self-center text-sm font-medium underline-offset-4 hover:underline", store ? "text-[#75624f] hover:text-[#2a2018]" : "text-muted hover:text-ink")}>
       <Mail className="h-4 w-4" /> {label}
     </button>
   );
@@ -38,7 +38,7 @@ export function SendToMe({ offerId, outboxId, tone = "store", label = "Email thi
   return (
     <form onSubmit={send} className={clsx("w-full rounded-2xl p-4", store ? "bg-[#fffaf4] ring-1 ring-orange-100" : "bg-stone-50 ring-1 ring-line")}>
       <label htmlFor={`stm-${offerId || outboxId}`} className={clsx("text-sm font-semibold", store ? "text-[#2a2018]" : "text-ink")}>See the real email</label>
-      <p className={clsx("mt-0.5 text-xs", store ? "text-[#8a7868]" : "text-muted")}>This practice member has a placeholder address, so we can send it to yours. Used once, never stored in full.</p>
+      <p className={clsx("mt-0.5 text-xs", store ? "text-[#75624f]" : "text-muted")}>This practice member has a placeholder address, so we can send it to yours. Used once, never stored in full.</p>
       <div className="mt-3 flex flex-col gap-2 sm:flex-row">
         <input id={`stm-${offerId || outboxId}`} type="email" required autoComplete="email" inputMode="email" maxLength={254} value={email}
           onChange={(e) => { setEmail(e.target.value); if (state === "error") setState("idle"); }} placeholder="you@email.com"

@@ -21,7 +21,7 @@ export function detectProvider(): Provider | null {
 }
 
 const SYSTEM = `You are Second Chance, a retention strategist for a subscription business (Brightside Yoga, an online yoga studio).
-Pick ONE offer for this subscriber and write a short, warm, personal message (max 55 words, no emojis, no pressure tactics, first name only).
+Pick ONE offer for this subscriber and write a short, warm, personal message (max 55 words, no emojis, no pressure tactics, first name only, always write prices with a dollar sign like $19/month).
 Guidance by trigger:
 - merchant_cancel: the subscriber is on the cancel page right now. "pause" (months 1-3, no price) suits breaks or low usage; "discount" (priceMonthly + months) suits price concerns from loyal members; "downgrade" moves to the Lite plan; "let_go" when a save is unlikely (switching, a bad fit). Address their stated reason directly.
 - payment_failed: kind must be "recovery". Reassure them, mention the 7-day grace period and ask them to update their PayPal payment method. No discount.
@@ -85,7 +85,7 @@ export function llmEngine(p: Provider): OfferEngine {
         return {
           kind, priceMonthly: price, months,
           headline: String(out.headline || "").slice(0, 80),
-          message: String(out.message || "").slice(0, 600),
+          message: withDollars(String(out.message || "")).slice(0, 600),
           rationale: String(out.rationale || "").slice(0, 300),
           engine: `llm:${p.name}:${p.model}`,
         };
@@ -95,4 +95,9 @@ export function llmEngine(p: Provider): OfferEngine {
       }
     },
   };
+}
+
+/** Models sometimes drop the "$" ("try 19/month"); put it back on bare per-month prices. */
+export function withDollars(t: string) {
+  return t.replace(/(?<![$\d.,])(\d{1,3}(?:\.\d{1,2})?)(?=\s?\/\s?(?:month|mo)\b)/g, "$$$1");
 }

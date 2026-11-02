@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { Check, ExternalLink, Loader2 } from "lucide-react";
+import { ctaFor } from "@/lib/email/templates";
 
 export function Claim({ offerId, kind, status, approveUrl }: { offerId: string; kind: string; status: string; approveUrl: string | null }) {
   const [state, setState] = useState<"idle" | "working" | "done" | "error">(status === "saved" ? "done" : "idle");
@@ -23,7 +24,7 @@ export function Claim({ offerId, kind, status, approveUrl }: { offerId: string; 
   if (state === "done") return (
     <div className="mt-6 space-y-3">
       <p className="flex items-center gap-2 rounded-2xl bg-emerald-50 p-4 text-sm text-emerald-800"><Check className="h-4 w-4" /> {detail || "Your membership is active again."}</p>
-      {link && <a href={link} className="btn-sun w-full">Confirm your discounted month in PayPal <ExternalLink className="h-4 w-4" /></a>}
+      {link && <a href={link} className="btn-sun w-full">{kind === "comeback" ? "Confirm your discounted month in PayPal" : "Confirm in PayPal"} <ExternalLink className="h-4 w-4" /></a>}
     </div>
   );
   return (
@@ -32,9 +33,9 @@ export function Claim({ offerId, kind, status, approveUrl }: { offerId: string; 
         setState("working");
         const r = await fetch("/api/save/accept", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ offerId }) });
         const j = await r.json();
-        setDetail(j.detail); setLink(j.approveUrl); setState(j.state === "error" ? "error" : "done");
+        setDetail(j.state === "pending_consent" ? "Almost there: confirm the new price in PayPal." : j.detail); setLink(j.approveUrl); setState(j.state === "error" ? "error" : "done");
       }}>
-        {state === "working" && <Loader2 className="h-4 w-4 animate-spin" />} Reactivate my membership
+        {state === "working" && <Loader2 className="h-4 w-4 animate-spin" />} {ctaFor(kind)}
       </button>
       {state === "error" && <p className="mt-2 text-sm text-rose-700">{detail}</p>}
     </div>

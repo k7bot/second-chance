@@ -19,6 +19,8 @@ export const LIMITS = {
   get demoPayPalIpHourly() { return num(process.env.DEMO_PAYPAL_IP_HOURLY_LIMIT, 30); },
   get demoRealIpHourly() { return num(process.env.DEMO_REAL_IP_HOURLY_LIMIT, 5); },
   get demoRealDaily() { return num(process.env.DEMO_REAL_DAILY_LIMIT, 20); },
+  get emailIpHourly() { return num(process.env.EMAIL_IP_HOURLY_LIMIT, 5); },
+  get emailDaily() { return num(process.env.EMAIL_DAILY_LIMIT, 50); },
 };
 
 /** Real client IP on Vercel (the edge overwrites these headers, so they can't be spoofed there). */

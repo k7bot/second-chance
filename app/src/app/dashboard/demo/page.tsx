@@ -4,6 +4,9 @@ import { ActionButton } from "@/components/client";
 import { Badge, statusTone } from "@/components/ui";
 import { AlertTriangle, PauseCircle, XCircle, CreditCard, RotateCcw, Radio, Zap, Users, Database, Trash2 } from "lucide-react";
 import { ImportForm } from "./import-form";
+import Link from "next/link";
+import { Mail } from "lucide-react";
+import { emailOn } from "@/lib/email";
 
 export const dynamic = "force-dynamic";
 
@@ -23,6 +26,12 @@ export default async function Demo() {
       <p className="eyebrow">For the demo video</p>
       <h1 className="mt-1 text-3xl font-semibold tracking-tight">Demo console</h1>
       <p className="mt-2 max-w-2xl text-sm text-muted">Fire PayPal events at Second Chance. <b>Via PayPal</b> uses PayPal&apos;s webhook simulator for a real, signed round trip. PayPal reuses one event id per type, so repeats are de-duplicated. <b>Replay</b> injects the same payload with a fresh id so you can run it again.</p>
+      {emailOn() && (
+        <p className="mt-3 inline-flex max-w-2xl items-start gap-2 rounded-xl bg-orange-50/70 px-3.5 py-2.5 text-sm text-ink-2 ring-1 ring-orange-100">
+          <Mail className="mt-0.5 h-4 w-4 shrink-0 text-[#e8743b]" />
+          <span>Want to see the real email? Simulated and practice members have placeholder addresses, so use <b>Email this to me</b> on any message in the <Link href="/dashboard/outbox" className="font-medium underline underline-offset-2">Outbox</Link>, or on the offer in the practice cancel flow.</span>
+        </p>
+      )}
 
       <div className="mt-8 grid gap-4 md:grid-cols-2">
         {CASES.map((c) => (

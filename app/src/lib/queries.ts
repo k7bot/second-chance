@@ -8,7 +8,7 @@ export const OFFER_LABEL: Record<string, string> = {
   recovery: "Payment recovery", comeback: "Come-back", let_go: "Let go",
 };
 export const TRIGGER_LABEL: Record<string, string> = {
-  merchant_cancel: "Cancel on site", payment_failed: "Payment failed", suspended: "Suspended", paypal_cancelled: "Cancelled in PayPal",
+  merchant_cancel: "Cancel on site", payment_failed: "Payment failed", suspended: "Suspended", paypal_cancelled: "Cancelled in PayPal", confirmation: "Confirmation",
 };
 
 export async function dashboardData() {

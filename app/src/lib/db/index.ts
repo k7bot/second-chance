@@ -22,6 +22,12 @@ const BOOTSTRAP = [
     subject text NOT NULL, body text NOT NULL, cta_label text, cta_url text, trigger text, created_at timestamptz NOT NULL DEFAULT now())`,
   `CREATE TABLE IF NOT EXISTS rate_limits (bucket text NOT NULL, key text NOT NULL, window_start timestamptz NOT NULL,
     count integer NOT NULL DEFAULT 0, PRIMARY KEY (bucket, key, window_start))`,
+  // email delivery (added after launch, so ALTER instead of CREATE for existing databases)
+  `ALTER TABLE outbox ADD COLUMN IF NOT EXISTS delivery_status text NOT NULL DEFAULT 'outbox_only'`,
+  `ALTER TABLE outbox ADD COLUMN IF NOT EXISTS delivery_detail text`,
+  `ALTER TABLE outbox ADD COLUMN IF NOT EXISTS provider_message_id text`,
+  `ALTER TABLE outbox ADD COLUMN IF NOT EXISTS delivered_to text`,
+  `ALTER TABLE outbox ADD COLUMN IF NOT EXISTS sent_at timestamptz`,
 ];
 
 import type { PgliteDatabase } from "drizzle-orm/pglite";

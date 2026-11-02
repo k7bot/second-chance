@@ -66,11 +66,17 @@ export const outbox = pgTable("outbox", {
   body: text("body").notNull(),
   ctaLabel: text("cta_label"),
   ctaUrl: text("cta_url"),
-  trigger: text("trigger"),
+  trigger: text("trigger"), // merchant_cancel | payment_failed | suspended | paypal_cancelled | confirmation
+  deliveryStatus: text("delivery_status").notNull().default("outbox_only"), // sent | failed | outbox_only
+  deliveryDetail: text("delivery_detail"), // why it stayed in the outbox, or the provider error
+  providerMessageId: text("provider_message_id"), // Resend email id
+  deliveredTo: text("delivered_to"), // masked address the email actually went to
+  sentAt: timestamp("sent_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
 export type Subscriber = typeof subscribers.$inferSelect;
 export type EventRow = typeof events.$inferSelect;
 export type Offer = typeof offers.$inferSelect;
+export type OutboxRow = typeof outbox.$inferSelect;
 export type OutboxMsg = typeof outbox.$inferSelect;

@@ -14,6 +14,6 @@ export async function GET(_: Request, ctx: { params: Promise<{ id: string }> }) 
   return Response.json({
     events: evts.map(({ payload, ...e }) => e),
     offers: offs.map((o) => ({ ...o, kindLabel: OFFER_LABEL[o.kind] ?? o.kind, triggerLabel: TRIGGER_LABEL[o.trigger] ?? o.trigger })),
-    outbox: outbox.map((m) => ({ id: m.id, subject: m.subject, createdAt: m.createdAt })),
+    outbox: outbox.map((m) => ({ id: m.id, subject: m.subject, createdAt: m.createdAt, deliveryStatus: m.deliveryStatus })),
   });
 }

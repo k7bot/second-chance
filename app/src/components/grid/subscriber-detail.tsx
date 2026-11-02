@@ -56,7 +56,7 @@ export function SubscriberDetail(p: CustomCellRendererProps) {
             {s.graceUntil && <><dt className="text-muted">Grace until</dt><dd className="font-medium">{fmtDate(s.graceUntil)}</dd></>}
           </dl>
           <p className="truncate font-mono text-[11px] text-muted">{s.id}</p>
-          {d?.outbox?.[0] && <p className="flex min-w-0 items-center gap-1.5 text-xs text-ink-2"><Mail className="h-3.5 w-3.5 shrink-0 text-muted" /> <span className="truncate">Last email: {d.outbox[0].subject}</span></p>}
+          {d?.outbox?.[0] && <p className="flex min-w-0 items-center gap-1.5 text-xs text-ink-2"><Mail className="h-3.5 w-3.5 shrink-0 text-muted" /> <span className="truncate">Last email: {d.outbox[0].subject}</span> <span className={d.outbox[0].deliveryStatus === "sent" ? "shrink-0 font-semibold text-emerald-700" : d.outbox[0].deliveryStatus === "failed" ? "shrink-0 font-semibold text-rose-700" : "shrink-0 text-muted"}>· {d.outbox[0].deliveryStatus === "sent" ? "Sent" : d.outbox[0].deliveryStatus === "failed" ? "Failed" : "Outbox only"}</span></p>}
           {s.status === "SUSPENDED" && s.pausedUntil && (
             <ActionButton url="/api/subscribers/resume" body={{ id: s.id }} className="btn-ghost mt-auto h-9 py-0 text-xs"><PlayCircle className="h-3.5 w-3.5" /> Resume now</ActionButton>
           )}

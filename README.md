@@ -177,21 +177,34 @@ See [`.env.example`](.env.example).
 | `DEMO_IP_HOURLY_LIMIT` | no | Demo console reset / practice members / sample history, per visitor IP per hour, default `10` |
 | `DEMO_PAYPAL_IP_HOURLY_LIMIT` | no | Simulator, import, reactivate and reconcile calls per visitor IP per hour, default `30` |
 | `DEMO_REAL_IP_HOURLY_LIMIT` / `DEMO_REAL_DAILY_LIMIT` | no | Suspend/cancel of real sandbox subscriptions: default `5` per visitor IP per hour and `20` per day; only subscriptions the console lists. `Authorization: Bearer $CRON_SECRET` skips the demo limits |
+| `RESEND_API_KEY` | no | Turns on real email through Resend's REST API (store it as a sensitive variable). Without it, or without `EMAIL_FROM`, every message stays in the outbox |
+| `EMAIL_FROM` | no | Sender on a verified Resend domain, e.g. `Brightside Yoga <offers@secondchance.heyremind.ai>` |
+| `EMAIL_REPLY_TO` | no | Reply-to address; when set, emails also say "just reply to this email" |
+| `EMAIL_IP_HOURLY_LIMIT` / `EMAIL_DAILY_LIMIT` | no | "Email this to me" sends for practice members: default `5` per visitor IP per hour and `50` per day across the app |
 | `NEXT_PUBLIC_AG_GRID_LICENSE_KEY` | no | AG Grid + AG Charts Enterprise. Without it a watermark is shown |
 | `NEXT_PUBLIC_AG_STUDIO_LICENSE_KEY` | no | AG Studio. Without it Studio runs in trial mode with a watermark |
+
+## Email
+
+Messages are written to the outbox first, then sent through [Resend](https://resend.com/docs/api-reference/emails/send-email) (`POST https://api.resend.com/emails`, no SDK) when `RESEND_API_KEY` and `EMAIL_FROM` are both set. The Outbox page shows each message's delivery status (*Sent* with the Resend id, *Failed* with the error, or *Outbox only* with the reason) and the address it went to, masked.
+
+- **Templates** (`app/src/lib/email/templates.ts`): one branded layout in HTML and plain text, with a single call-to-action button that links back into the app (`APP_BASE_URL`). It covers failed-payment recovery, the save offer, the come-back after a suspension, the win-back after a cancel in PayPal, and confirmations (paused, new price, waiting on PayPal, cancelled).
+- **Who gets real email:** only real sandbox buyers whose address is not a placeholder (`@example.com` and similar stay in the outbox). Practice (`DEMO-`), sample (`SAMPLE-`) and simulator members never send to their placeholder addresses.
+- **Email this to me:** for those placeholder members a visitor can type their own address and get the real email. Limits are 5 per IP per hour and 50 per day, the address is checked, and only a masked form is stored.
+- **Offline check:** `npx tsx scripts/email-selftest.ts` (stubbed fetch, throwaway database, no key) and `npx tsx scripts/render-emails.ts <dir>` to render every template to HTML.
 
 ## Demo walkthrough
 
 1. **Store** (`/store`): Brightside Yoga's plans, each with a PayPal subscribe button.
 2. **Cancel** (`/store/account` → *Cancel membership*): pick a reason ("too expensive", "taking a break"…). Second Chance shows one tailored offer. Accept it and PayPal is updated: a pause is instant, a discount or downgrade asks for buyer consent.
-3. **Demo console** (`/dashboard/demo`): fire signed PayPal sandbox events (payment failed, suspended, cancelled in PayPal, payment received), or replay them. Watch each case run, and the outbox fill with AI-written recovery, come-back and win-back messages.
+3. **Demo console** (`/dashboard/demo`): fire signed PayPal sandbox events (payment failed, suspended, cancelled in PayPal, payment received), or replay them. Watch each case run, and the outbox fill with AI-written recovery, come-back and win-back messages. With email switched on, *Email this to me* on any outbox message (or on the offer in the practice cancel flow) sends you the real branded email.
 4. **Dashboard** (`/dashboard`): MRR saved, save rate, who needs attention, and live webhooks.
 5. **Subscribers / Offers**: group the retention queue, open a member's PayPal timeline, pivot offers by churn signal, and ask the grid in plain English.
 6. **Studio** (`/dashboard/studio`): the save-flow Sankey, then *Build · Ask AI* → "Who should I call today?"
 
 ## Sandbox and sample data
 
-- Everything runs against the **PayPal sandbox**. No real money moves, and no real email or SMS is sent: messages go to the in-app outbox.
+- Everything runs against the **PayPal sandbox**. No real money moves and no SMS is sent. Every message is recorded in the in-app outbox; real email goes out only when Resend is configured (see [Email](#email)).
 - **Practice members** (`DEMO-*`) run the full save flow with no PayPal calls, so the hosted demo works without a sandbox buyer login.
 - **Sample history** (`SAMPLE-*` ids, verification `SAMPLE`) is a clearly labelled synthetic book of business. It gives the grids, pivots and Studio months of history to show. Load or clear it from the demo console. It never touches PayPal, and live sandbox data stays separate.
 - `/dashboard` has no auth: this is a single-merchant demo.

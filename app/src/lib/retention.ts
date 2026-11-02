@@ -2,6 +2,8 @@ import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { getDb, schema } from "./db";
 import { cfg, planInfo } from "./config";
 import { approveLink, subs } from "./paypal";
+import { deliverOutbox } from "./email";
+import { ctaFor } from "./email/templates";
 import { getEngine, type CancelReason, type OfferContext, type OfferDecision, type Trigger } from "./offers";
 
 const { subscribers, events, offers, outbox } = schema;
@@ -104,12 +106,65 @@ async function recordOffer(s: Sub, trigger: Trigger, d: OfferDecision, extra: Pa
   return (await db.select().from(offers).where(eq(offers.id, id)))[0];
 }
 
-async function sendOutbox(s: Sub, offerId: string | null, trigger: Trigger, subject: string, body: string, ctaLabel?: string, ctaUrl?: string) {
+type OutboxTrigger = Trigger | "confirmation";
+
+/** Record a message in the outbox, then email it for real when allowed (see lib/email). */
+async function sendOutbox(s: Sub, offerId: string | null, trigger: OutboxTrigger, subject: string, body: string, ctaLabel?: string, ctaUrl?: string) {
   const db = await getDb();
+  const id = uid("msg");
   await db.insert(outbox).values({
-    id: uid("msg"), subscriptionId: s.id, offerId, toEmail: s.email, toName: s.name, subject, body,
+    id, subscriptionId: s.id, offerId, toEmail: s.email, toName: s.name, subject, body,
     ctaLabel: ctaLabel ?? null, ctaUrl: ctaUrl ?? null, trigger,
   });
+  const row = (await db.select().from(outbox).where(eq(outbox.id, id)))[0];
+  try { await deliverOutbox(row, s); } catch (e) { console.error(`[email] ${id}: ${(e as Error).message}`); }
+  return row;
+}
+
+/** The outbox message for a save offer made in the cancel flow (created on demand, e.g. for "Send it to me"). */
+export async function outboxForOffer(offerId: string) {
+  const db = await getDb();
+  const off = (await db.select().from(offers).where(eq(offers.id, offerId)))[0];
+  if (!off) return { error: "Offer not found" as const };
+  const s = await getSub(off.subscriptionId);
+  if (!s) return { error: "Offer not found" as const };
+  const existing = (await db.select().from(outbox).where(and(eq(outbox.offerId, off.id), eq(outbox.trigger, off.trigger))).orderBy(desc(outbox.createdAt)))[0];
+  if (existing) return { row: existing, sub: s, offer: off };
+  if (off.kind === "let_go") return { error: "There's no offer to send for this one." as const };
+  const id = uid("msg");
+  await db.insert(outbox).values({
+    id, subscriptionId: s.id, offerId: off.id, toEmail: s.email, toName: s.name, subject: off.headline || "An offer from Brightside Yoga",
+    body: off.message || "", ctaLabel: ctaFor(off.kind), ctaUrl: `${cfg.appUrl}/store/welcome-back/${off.id}`, trigger: off.trigger,
+    deliveryDetail: isSim(s) || isSimId(s.id) ? "practice member (placeholder address)" : "shown on site",
+  });
+  return { row: (await db.select().from(outbox).where(eq(outbox.id, id)))[0], sub: s, offer: off };
+}
+
+/** Confirmation email after a customer acts on an offer (saved, waiting on PayPal, or cancelled). */
+export async function confirmOutcome(offerId: string, r: AcceptResult) {
+  if (r.state === "error") return;
+  const db = await getDb();
+  const off = (await db.select().from(offers).where(eq(offers.id, offerId)))[0];
+  if (!off || (off.kind === "winback" && r.state === "pending_consent")) return;
+  const s = await getSub(off.subscriptionId);
+  if (!s) return;
+  const first = (s.name || "").split(" ")[0] || "there";
+  const account = `${cfg.appUrl}/store/account`;
+  let m: { subject: string; body: string; cta?: string; url?: string };
+  if (r.state === "pending_consent") {
+    m = { subject: "One last step: confirm in PayPal", body: `Hi ${first}, your new price is ready. PayPal just needs you to confirm it, which takes about ten seconds.\n\nUntil you confirm, nothing changes and nothing extra is charged.`, cta: "Confirm in PayPal", url: r.approveUrl };
+  } else if (r.state === "lost") {
+    m = { subject: "Your membership is cancelled", body: `Hi ${first}, your cancellation is confirmed and you won't be charged again.\n\nThank you for practising with us. If you ever want to come back, your mat is waiting.`, cta: "Rejoin Brightside", url: `${cfg.appUrl}/store` };
+  } else {
+    const subject = off.kind === "pause" ? "Your membership is paused"
+      : off.kind === "comeback" || off.kind === "recovery" ? `Welcome back, ${first}!`
+      : "Your new price is locked in";
+    m = { subject, body: `Hi ${first}, it's done. ${r.detail}\n\nYour classes, streaks and saved sessions are all right where you left them.`,
+      ...(r.approveUrl ? { cta: "Confirm your discounted month", url: r.approveUrl } : { cta: "View my membership", url: account }) };
+  }
+  const dupe = (await db.select({ id: outbox.id }).from(outbox).where(and(eq(outbox.offerId, off.id), eq(outbox.trigger, "confirmation"), eq(outbox.subject, m.subject))))[0];
+  if (dupe) return;
+  await sendOutbox(s, off.id, "confirmation", m.subject, m.body, m.cta, m.url);
 }
 
 async function resolveOffer(id: string, status: string, mrrSaved = 0, extra: Partial<typeof offers.$inferInsert> = {}) {

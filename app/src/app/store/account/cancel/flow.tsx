@@ -3,6 +3,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Check, Heart, Loader2, PauseCircle, Percent, ArrowDownCircle, ExternalLink, Sparkles } from "lucide-react";
 import clsx from "clsx";
+import { SendToMe } from "@/components/send-to-me";
 
 type Reason = { id: string; label: string; hint: string };
 type Offer = { id: string; kind: string; headline: string; message: string; priceMonthly: number | null; months: number | null; engine: string };
@@ -17,7 +18,7 @@ const KIND = {
 
 const fmt = (n: number) => `$${n.toFixed(2).replace(/\.00$/, "")}`;
 
-export function CancelFlow({ reasons, sub }: { reasons: Reason[]; sub: { name: string; plan: string; price: number; nextBill: string | null } }) {
+export function CancelFlow({ reasons, sub, canEmailMe = false }: { reasons: Reason[]; sub: { name: string; plan: string; price: number; nextBill: string | null }; canEmailMe?: boolean }) {
   const [step, setStep] = useState<"reason" | "thinking" | "offer" | "working" | "result">("reason");
   const [reason, setReason] = useState<string>("");
   const [text, setText] = useState("");
@@ -79,7 +80,7 @@ export function CancelFlow({ reasons, sub }: { reasons: Reason[]; sub: { name: s
       )}
 
       {(step === "offer" || step === "working") && offer && (
-        <OfferCard offer={offer} sub={sub} working={step === "working"} err={err} onAccept={() => act("accept")} onDecline={() => act("decline")} />
+        <OfferCard offer={offer} sub={sub} canEmailMe={canEmailMe} working={step === "working"} err={err} onAccept={() => act("accept")} onDecline={() => act("decline")} />
       )}
 
       {step === "result" && result && <ResultCard result={result} offer={offer!} />}
@@ -102,7 +103,7 @@ function Steps({ step }: { step: string }) {
   );
 }
 
-function OfferCard({ offer, sub, working, err, onAccept, onDecline }: { offer: Offer; sub: { price: number }; working: boolean; err: string; onAccept: () => void; onDecline: () => void }) {
+function OfferCard({ offer, sub, canEmailMe, working, err, onAccept, onDecline }: { offer: Offer; sub: { price: number }; canEmailMe: boolean; working: boolean; err: string; onAccept: () => void; onDecline: () => void }) {
   const k = KIND[offer.kind] || KIND.discount;
   const Icon = k.icon;
   const isLetGo = offer.kind === "let_go";
@@ -133,6 +134,7 @@ function OfferCard({ offer, sub, working, err, onAccept, onDecline }: { offer: O
         </button>
         {!isLetGo && <button onClick={onDecline} disabled={working} className="btn-link self-center">No thanks, cancel my membership</button>}
         {(offer.kind === "discount" || offer.kind === "downgrade") && <p className="text-center text-xs text-[#8a7868]">You&apos;ll confirm the new price securely in PayPal.</p>}
+        {canEmailMe && !isLetGo && <div className="mt-1 flex justify-center border-t border-orange-100 pt-4"><SendToMe offerId={offer.id} /></div>}
       </div>
     </section>
   );

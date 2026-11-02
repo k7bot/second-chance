@@ -1,4 +1,5 @@
 import { studioAiModels, studioAiUpstream } from "@/lib/studio-ai";
+import { AI_RESTING, clientKey, llmBudget } from "@/lib/guard";
 
 // Proxy for AG Studio's Responses-API adapter (components/studio/openai-adapter.ts). The browser POSTs to
 // /api/ai/responses; this adds the server's key, pins the model to the allow-list, caps output and streams the
@@ -13,6 +14,11 @@ export async function POST(request: Request) {
   try { body = await request.json(); } catch { return error(400, "Request body must be JSON."); }
 
   const models = studioAiModels();
+  const budget = await llmBudget(clientKey(request.headers));
+  if (!budget.ok) {
+    console.info(`[guard] Studio analyst ${budget.why} cap reached`);
+    return Response.json({ error: { message: AI_RESTING } }, { status: 429, headers: { "Retry-After": "600" } });
+  }
   const model = typeof body.model === "string" && body.model ? body.model : models[0];
   if (!models.includes(model)) return error(400, `Model "${model}" is not enabled.`);
   // Instruct models on Nebius reject OpenAI reasoning params.
@@ -49,5 +55,14 @@ export async function POST(request: Request) {
     console.warn(`[studio-ai] upstream ${res.status}: ${String(msg).slice(0, 300)}`);
     return error(res.status, String(msg));
   }
-  return new Response(res.body, { status: res.status, headers: { "Content-Type": res.headers.get("Content-Type") ?? "text/event-stream", "Cache-Control": "no-store" } });
+  // Log token usage from the final SSE event (counts only, never content) so spend can be tracked.
+  const [toClient, toLog] = res.body!.tee();
+  void (async () => {
+    try {
+      const text = await new Response(toLog).text();
+      const m = text.slice(text.lastIndexOf('"usage":')).match(/"input_tokens":(\d+)[\s\S]*?"output_tokens":(\d+)/);
+      if (m) console.info(`[studio-ai] usage in=${m[1]} out=${m[2]}`);
+    } catch { /* ignore */ }
+  })();
+  return new Response(toClient, { status: res.status, headers: { "Content-Type": res.headers.get("Content-Type") ?? "text/event-stream", "Cache-Control": "no-store" } });
 }

@@ -25,6 +25,8 @@ export interface OfferContext {
   };
   reason?: CancelReason;
   reasonText?: string;
+  /** Hashed visitor key for the LLM spend guard. Never sent to the model. */
+  clientKey?: string;
 }
 
 export interface OfferDecision {

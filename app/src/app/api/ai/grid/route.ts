@@ -1,4 +1,5 @@
 import { chatJson, aiProvider } from "@/lib/ai";
+import { AI_RESTING, clientKey, llmBudget } from "@/lib/guard";
 
 /**
  * AG Grid AI Toolkit backend. The browser sends the grid's structured schema (api.getStructuredSchema),
@@ -8,6 +9,7 @@ export async function POST(req: Request) {
   if (!aiProvider()) return Response.json({ error: "No AI key is configured on the server." }, { status: 503 });
   const { prompt, context, state, schema, sample } = await req.json();
   if (typeof prompt !== "string" || !prompt.trim() || prompt.length > 500) return Response.json({ error: "Ask a short question." }, { status: 400 });
+  if (!(await llmBudget(clientKey(req.headers))).ok) return Response.json({ error: AI_RESTING }, { status: 429, headers: { "Retry-After": "600" } });
   const system = `You are an expert data analyst driving an AG Grid data grid for a subscription retention dashboard.
 ${context}
 Turn the user's request into grid state. Reply with JSON only, shaped exactly:

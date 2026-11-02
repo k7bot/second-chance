@@ -284,7 +284,7 @@ async function onPayPalCancelled(s: Sub) {
 
 /* ---------------- Merchant-site save flow ---------------- */
 
-export async function proposeSave(subId: string, reason: CancelReason, reasonText?: string) {
+export async function proposeSave(subId: string, reason: CancelReason, reasonText?: string, clientKey?: string) {
   const s = await getSub(subId);
   if (!s) throw new Error("unknown subscription");
   const db = await getDb();
@@ -292,7 +292,7 @@ export async function proposeSave(subId: string, reason: CancelReason, reasonTex
   await db.update(offers).set({ status: "declined", resolvedAt: new Date() })
     .where(and(eq(offers.subscriptionId, subId), eq(offers.trigger, "merchant_cancel"), eq(offers.status, "proposed")));
   await patchSub(subId, { risk: "at_risk", riskReason: `cancel intent: ${reason}` });
-  const d = await getEngine().decide(await context(s, "merchant_cancel", reason, reasonText));
+  const d = await getEngine().decide({ ...(await context(s, "merchant_cancel", reason, reasonText)), clientKey });
   return recordOffer(s, "merchant_cancel", d, { reason: reasonText ? `${reason}: ${reasonText}` : reason });
 }
 

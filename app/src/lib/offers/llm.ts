@@ -1,6 +1,7 @@
 import type { OfferContext, OfferDecision, OfferEngine, OfferKind } from "./types";
 import { GUARDRAILS } from "./types";
 import { rulesEngine } from "./rules";
+import { llmBudget } from "../guard";
 
 type Provider = { name: string; baseUrl: string; model: string; key: string };
 
@@ -34,6 +35,12 @@ export function llmEngine(p: Provider): OfferEngine {
   return {
     name: `llm:${p.name}`,
     async decide(ctx: OfferContext): Promise<OfferDecision> {
+      // Spend guard: over the per-visitor or daily cap, quietly use the rules engine instead.
+      const budget = await llmBudget(ctx.clientKey);
+      if (!budget.ok) {
+        console.info(`[guard] LLM ${budget.why} cap reached, using rules for ${ctx.trigger}`);
+        return rulesEngine.decide(ctx);
+      }
       const allowed = GUARDRAILS.allowed[ctx.trigger];
       const user = {
         trigger: ctx.trigger,

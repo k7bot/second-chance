@@ -20,6 +20,8 @@ const BOOTSTRAP = [
     created_at timestamptz NOT NULL DEFAULT now(), resolved_at timestamptz)`,
   `CREATE TABLE IF NOT EXISTS outbox (id text PRIMARY KEY, subscription_id text, offer_id text, to_email text, to_name text,
     subject text NOT NULL, body text NOT NULL, cta_label text, cta_url text, trigger text, created_at timestamptz NOT NULL DEFAULT now())`,
+  `CREATE TABLE IF NOT EXISTS rate_limits (bucket text NOT NULL, key text NOT NULL, window_start timestamptz NOT NULL,
+    count integer NOT NULL DEFAULT 0, PRIMARY KEY (bucket, key, window_start))`,
 ];
 
 import type { PgliteDatabase } from "drizzle-orm/pglite";

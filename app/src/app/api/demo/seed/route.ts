@@ -2,6 +2,7 @@ import { eq, like } from "drizzle-orm";
 import { getDb, schema } from "@/lib/db";
 import { cfg } from "@/lib/config";
 import { DEMO_PREFIX } from "@/lib/retention";
+import { demoLimit } from "@/lib/guard";
 
 const DAY = 86_400_000;
 /** Local practice members: they run the whole save flow without a PayPal buyer account (no PayPal calls). */
@@ -11,7 +12,9 @@ const MEMBERS = [
   { id: "DEMO-AVA", name: "Ava Ruiz", email: "ava.ruiz@example.com", months: 7 },
 ];
 
-export async function POST() {
+export async function POST(req: Request) {
+  const limited = await demoLimit(req, "demo-seed");
+  if (limited) return limited;
   const db = await getDb();
   const ids = MEMBERS.map((m) => m.id);
   for (const t of [schema.offers, schema.outbox] as const) await db.delete(t).where(like(t.subscriptionId, `${DEMO_PREFIX}%`));

@@ -1,3 +1,7 @@
+> **Current state (Nov 2, 2026):** these are the original spike notes. The webhook `51164201KX432424G` now points at the hosted app,
+> `https://second-chance-k12-4d00.vercel.app/api/paypal/webhook` (note the `/api` prefix; the spike server used `/paypal/webhook`).
+> See [docs/STATUS.md](../../docs/STATUS.md) and [docs/DEPLOY.md](../../docs/DEPLOY.md) for the live setup.
+
 # Spike #1 – PayPal sandbox webhooks end to end (Nov 1 2026)
 
 ## Result: WORKS
@@ -21,7 +25,7 @@ PayPal sandbox -> public URL -> local server -> stored + signature verified.
 ## Webhook
 - id `51164201KX432424G` → https://smee.io/<your-channel>
 - Events: BILLING.SUBSCRIPTION.{CREATED,ACTIVATED,UPDATED,CANCELLED,SUSPENDED,PAYMENT.FAILED,EXPIRED,RE-ACTIVATED}, PAYMENT.SALE.COMPLETED
-- When moving to Vercel: `node setup-webhook.js https://<app>.vercel.app/paypal/webhook` (updates in place; ID stays the same).
+- When moving to Vercel: `node setup-webhook.js https://<app>.vercel.app/api/paypal/webhook` (updates in place; ID stays the same). Done Nov 2.
 
 ## Simulator results
 | Event | Simulate API | Arrived | verification_status |

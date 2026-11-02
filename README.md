@@ -4,7 +4,20 @@
 
 Built for the PayPal AI Hackathon (2026). The demo merchant is **Brightside Yoga**, a fictional studio running on the PayPal sandbox.
 
+**Live demo:** https://second-chance-k12-4d00.vercel.app · Project status: [docs/STATUS.md](docs/STATUS.md)
+
 ![Retention overview](docs/screenshots/20-overview.png)
+
+## Try it (for judges)
+
+No accounts or PayPal login needed. Everything runs on the PayPal sandbox.
+
+1. **Cancel as a member.** Open [/store/account](https://second-chance-k12-4d00.vercel.app/store/account) and sign in as a practice member: **Maya Chen** (14 months), **Leo Park** (2 months) or **Ava Ruiz** (7 months). Choose *Cancel membership*, pick a reason, and Second Chance shows one offer written for that member by the AI. A **"Demo · what Second Chance decided"** panel shows the model, the offer and why. Accept it, decline it, or *Cancel without an offer*.
+2. **See the real email.** On the offer (or any Outbox message), use **Email this to me**: the branded email arrives from `offers@secondchance.heyremind.ai`.
+3. **Fire PayPal events.** In the [demo console](https://second-chance-k12-4d00.vercel.app/dashboard/demo), send signed sandbox webhooks (payment failed, suspended, cancelled in PayPal, payment received) and watch cases 1, 3 and 4 run. *Reset practice members* and *Reset* restore the demo.
+4. **Look at the merchant side.** [Dashboard](https://second-chance-k12-4d00.vercel.app/dashboard) → Subscribers, Offers & revenue, Outbox, Events, and [Studio](https://second-chance-k12-4d00.vercel.app/dashboard/studio) → *Ask AI*: "Who should I call today?"
+
+Demo actions, AI calls and emails have light per-visitor limits (see [Limits](#limits)); normal judging never hits them.
 
 ## The problem
 
@@ -24,7 +37,7 @@ Second Chance listens to the merchant's PayPal subscription webhooks and adds a 
 | # | Trigger | What happens |
 |---|---|---|
 | 1 | `BILLING.SUBSCRIPTION.PAYMENT.FAILED` | The member is marked at risk with a 7-day grace period and gets a recovery message. `PAYMENT.SALE.COMPLETED` closes it as saved |
-| 2 | Cancel on the merchant's site | Save flow: reason → offer → result. **Pause** suspends in PayPal (no consent needed). **Discount** revises to the Save50 plan. **Downgrade** revises to Lite. The buyer confirms both in PayPal. Declining cancels in PayPal |
+| 2 | Cancel on the merchant's site | Save flow: reason → offer → result (or *Cancel without an offer*, `POST /api/save/cancel`, so the flow never traps anyone). **Pause** suspends in PayPal (no consent needed). **Discount** revises to the Save50 plan. **Downgrade** revises to Lite. The buyer confirms both in PayPal. Declining cancels in PayPal |
 | 3 | `BILLING.SUBSCRIPTION.SUSPENDED` (not started by us) | A come-back message; one tap calls `/activate` |
 | 4 | `BILLING.SUBSCRIPTION.CANCELLED` (not started by us) | Win-back: a new subscription on the Win-back plan with the offer price as a plan override, sent as a one-tap approve link. `ACTIVATED` with `custom_id=winback:<old>:<offer>` marks it saved |
 
@@ -53,6 +66,7 @@ Webhooks are de-duplicated by event id. Every event is stored, but unverified on
 
 ## How AI is used
 
+- **Model:** Nebius AI Studio `Qwen/Qwen3-30B-A3B-Instruct-2507` in production (`LLM_PROVIDER=nebius`), for both the offer engine and the Studio analyst.
 - **Offer engine** (`app/src/lib/offers/`): an LLM picks the offer kind, price, duration and message from the member's context (plan, tenure, payment history, cancel reason, trigger). Every decision is clamped by guardrails: price never below 40% of list, discounts at most 6 months, pauses at most 3 months, and a per-trigger list of allowed offers. Any error or timeout falls back to a deterministic **rules** engine, so the app works with no AI key at all.
 - **"Ask the grid"** (AG Grid AI Toolkit): merchants type plain English ("members over 12 months tenure that we lost, grouped by plan") and the grid's filters, grouping and sorting change to match. Undo is one click.
 - **AI analyst in AG Studio**: an agent built on the AG Studio agent framework, with two custom tools (`list_at_risk_members`, `retention_playbook`). It answers "Who should I call today?", recommends the best offer per churn signal, and hands work to Studio's built-in agents to add charts or explain a page.
@@ -92,10 +106,11 @@ flowchart LR
     HOOK[/api/paypal/webhook<br/>verify + dedupe/]
     RET[Retention engine<br/>cases 1–4]
     ENG{Offer engine}
-    LLM[LLM · OpenAI-compatible]
+    LLM[LLM · Nebius Qwen<br/>OpenAI-compatible]
     RULES[Rules fallback]
-    DB[(Postgres / PGlite<br/>Drizzle)]
+    DB[(Neon Postgres / PGlite<br/>Drizzle)]
     OUT[Outbox · messages]
+    MAIL[Resend email]
     CRON[/api/cron/resume<br/>Vercel Cron/]
     DASH[Merchant dashboard<br/>AG Grid · AG Charts · AG Studio]
     AIP[/api/ai/* proxy/]
@@ -108,7 +123,7 @@ flowchart LR
   ENG -. error/timeout .-> RULES
   RET -- suspend / activate / revise / cancel / create --> SUBS
   RET --> DB
-  RET --> OUT
+  RET --> OUT --> MAIL
   CRON --> RET
   DB --> DASH
   DASH --> AIP --> LLM
@@ -121,9 +136,12 @@ app/                  Next.js 16 app (the whole product). Vercel Root Directory 
   src/app/            Routes: /store, /dashboard/*, /api/*
   src/lib/            PayPal client, retention engine, offer engines, DB (Drizzle)
   src/components/     UI, AG Grid views, AG Studio (data model, theme, Sankey, AI)
-  scripts/            Playwright screenshot scripts
+  scripts/            Playwright screenshot scripts, email self-test and template renderer
   vercel.json         Cron schedule for auto-resume
 tools/paypal-spikes/  The sandbox spikes: webhook receiver, catalog/plan setup, revise, win-back, simulator
+docs/STATUS.md        Done, remaining work, known caveats
+docs/DEPLOY.md        How production is deployed (Vercel + Neon + PayPal + Resend)
+docs/DECISIONS.md     Short decision log
 docs/screenshots/     Screenshots
 .env.example          Every environment variable, with placeholders
 ```
@@ -152,7 +170,11 @@ npx smee-client -u https://smee.io/<your-channel> -t http://localhost:3000/api/p
 
 On Vercel, point the webhook straight at `https://<app>.vercel.app/api/paypal/webhook`.
 
-**Deploying to Vercel:** import the repo and set **Root Directory** to `app`. Add the env vars from `.env.example`. The cron in `app/vercel.json` is picked up automatically.
+## Deploy
+
+**Simple path:** import the repo in Vercel, set **Root Directory** to `app`, add the env vars from `.env.example`, and set `DATABASE_URL` to a Neon database. The cron in `app/vercel.json` is picked up automatically. Point the PayPal webhook at `https://<app>.vercel.app/api/paypal/webhook`.
+
+**How the hosted demo is deployed today:** the project is not Git-linked, so each deploy uploads a packed archive of the committed `app/` tree through the Vercel API, with a custom install command that unpacks it. File paths in the upload need the `app/` prefix because Root Directory is `app`. Secrets are pasted into the Vercel UI by hand. Full steps: [docs/DEPLOY.md](docs/DEPLOY.md).
 
 ## Environment variables
 
@@ -168,8 +190,9 @@ See [`.env.example`](.env.example).
 | `DATABASE_URL` | no | Neon Postgres. Without it, embedded PGlite is used |
 | `CRON_SECRET` | no | If set, `/api/cron/resume` requires `Authorization: Bearer <secret>` |
 | `OFFER_ENGINE` | no | `auto` (default), `llm` or `rules` |
-| `NEBIUS_API_KEY` / `OPENAI_API_KEY` / `XAI_API_KEY` | no | Any one enables the AI offer engine and the Studio analyst |
-| `LLM_API_KEY`, `LLM_BASE_URL`, `LLM_MODEL`, `LLM_TIMEOUT_MS` | no | Any other OpenAI-compatible endpoint, plus model and timeout overrides |
+| `LLM_PROVIDER` | no | `nebius`, `openai`, `xai` or `custom` to pin a provider. Empty = auto (custom, then OpenAI, xAI, Nebius, by which key is set). Production: `nebius` |
+| `NEBIUS_API_KEY` / `OPENAI_API_KEY` / `XAI_API_KEY` | no | Any one enables the AI offer engine and the Studio analyst (secret) |
+| `LLM_API_KEY`, `LLM_BASE_URL`, `LLM_MODEL`, `LLM_TIMEOUT_MS` | no | Any other OpenAI-compatible endpoint, plus model and timeout overrides (Nebius default model: `Qwen/Qwen3-30B-A3B-Instruct-2507`) |
 | `STUDIO_AI_MODELS` | no | Comma-separated models the Studio analyst may call (default: Qwen/Qwen3-30B-A3B-Instruct-2507 on Nebius, else an OpenAI mini model) |
 | `STUDIO_AI_MODEL` | no | Single-model override for the Studio analyst (used when `STUDIO_AI_MODELS` is empty) |
 | `LLM_IP_HOURLY_LIMIT` | no | AI calls (offers, Studio analyst, grid AI) per visitor IP per hour, default `60`; over it offers quietly use the rules engine and the analyst says it is resting |
@@ -177,12 +200,26 @@ See [`.env.example`](.env.example).
 | `DEMO_IP_HOURLY_LIMIT` | no | Demo console reset / practice members / sample history, per visitor IP per hour, default `10` |
 | `DEMO_PAYPAL_IP_HOURLY_LIMIT` | no | Simulator, import, reactivate and reconcile calls per visitor IP per hour, default `30` |
 | `DEMO_REAL_IP_HOURLY_LIMIT` / `DEMO_REAL_DAILY_LIMIT` | no | Suspend/cancel of real sandbox subscriptions: default `5` per visitor IP per hour and `20` per day; only subscriptions the console lists. `Authorization: Bearer $CRON_SECRET` skips the demo limits |
+| `RATE_LIMIT_SALT` | no | Salt for hashing visitor IPs in `rate_limits` (defaults to `CRON_SECRET`) |
 | `RESEND_API_KEY` | no | Turns on real email through Resend's REST API (store it as a sensitive variable). Without it, or without `EMAIL_FROM`, every message stays in the outbox |
 | `EMAIL_FROM` | no | Sender on a verified Resend domain, e.g. `Brightside Yoga <offers@secondchance.heyremind.ai>` |
 | `EMAIL_REPLY_TO` | no | Reply-to address; when set, emails also say "just reply to this email" |
 | `EMAIL_IP_HOURLY_LIMIT` / `EMAIL_DAILY_LIMIT` | no | "Email this to me" sends for practice members: default `5` per visitor IP per hour and `50` per day across the app |
 | `NEXT_PUBLIC_AG_GRID_LICENSE_KEY` | no | AG Grid + AG Charts Enterprise. Without it a watermark is shown |
 | `NEXT_PUBLIC_AG_STUDIO_LICENSE_KEY` | no | AG Studio. Without it Studio runs in trial mode with a watermark |
+| `PGLITE_DIR`, `SC_ENV_FILE` | no | Local only: PGlite data directory (default `app/.data/pglite`) and an alternate env file (default `../.env.sandbox`) |
+
+The hosted demo sets `NEXT_PUBLIC_AG_GRID_LICENSE_KEY` to a 30-day AG Grid Enterprise trial key that expires Dec 2, 2026; after that AG Grid and AG Studio show a watermark, which is fine for the demo. Never commit real values: secrets go into the Vercel UI only (see [docs/DEPLOY.md](docs/DEPLOY.md)).
+
+## Limits
+
+Light abuse protection (`app/src/lib/guard.ts`) keeps a public demo with a paid AI key and real email safe:
+
+- Fixed-window counters live in the Postgres `rate_limits` table, so they hold across serverless instances. Visitor IPs are stored only as salted SHA-256 hashes.
+- **AI:** 60 calls per visitor IP per hour and 1,500 per day across the app. Over the cap, offers quietly use the rules engine and the Studio analyst says it is resting.
+- **Demo console:** 10 resets/seeds per IP per hour, 30 PayPal simulator/import/reconcile calls per IP per hour, 5 real-subscription actions per IP per hour (20 per day).
+- **Email this to me:** 5 per IP per hour, 50 per day.
+- The limiter **fails open**: if the counter table errors, the request goes through. `Authorization: Bearer $CRON_SECRET` (the operator) skips the demo limits.
 
 ## Email
 

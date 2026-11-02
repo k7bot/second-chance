@@ -28,7 +28,7 @@ Second Chance listens to the merchant's PayPal subscription webhooks and adds a 
 | 3 | `BILLING.SUBSCRIPTION.SUSPENDED` (not started by us) | A come-back message; one tap calls `/activate` |
 | 4 | `BILLING.SUBSCRIPTION.CANCELLED` (not started by us) | Win-back: a new subscription on the Win-back plan with the offer price as a plan override, sent as a one-tap approve link. `ACTIVATED` with `custom_id=winback:<old>:<offer>` marks it saved |
 
-Paused subscriptions resume automatically. An hourly Vercel Cron (`/api/cron/resume`) reactivates every subscription whose pause has ended.
+Paused subscriptions resume automatically. A daily Vercel Cron (`/api/cron/resume`, 10:00 UTC; Vercel Hobby allows one run per day) reactivates every subscription whose pause has ended.
 
 | Save offer | Win-back landing | AI-written offer log |
 |---|---|---|

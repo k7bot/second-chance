@@ -24,9 +24,13 @@ export async function POST(request: Request) {
       body.input = body.input
         .filter((it: any) => it?.type !== "reasoning")
         .map((it: any, i: number) => {
-          if (it && typeof it === "object" && !it.id) {
-            if (it.type === "function_call") return { ...it, id: `fc_${it.call_id ?? i}` };
-            if (it.type === "message" && it.role === "assistant") return { ...it, id: `msg_${i}` };
+          if (!it || typeof it !== "object") return it;
+          if (it.type === "function_call") return { ...it, id: it.id || `fc_${it.call_id ?? i}`, status: it.status || "completed" };
+          if (it.type === "message" && it.role === "assistant") {
+            const content = Array.isArray(it.content)
+              ? it.content.map((c: any) => (c?.type === "output_text" && !Array.isArray(c.annotations) ? { ...c, annotations: [] } : c))
+              : it.content;
+            return { ...it, id: it.id || `msg_${i}`, status: it.status || "completed", content };
           }
           return it;
         });

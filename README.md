@@ -170,7 +170,8 @@ See [`.env.example`](.env.example).
 | `OFFER_ENGINE` | no | `auto` (default), `llm` or `rules` |
 | `NEBIUS_API_KEY` / `OPENAI_API_KEY` / `XAI_API_KEY` | no | Any one enables the AI offer engine and the Studio analyst |
 | `LLM_API_KEY`, `LLM_BASE_URL`, `LLM_MODEL`, `LLM_TIMEOUT_MS` | no | Any other OpenAI-compatible endpoint, plus model and timeout overrides |
-| `STUDIO_AI_MODELS` | no | Models the Studio analyst may call (default: Qwen3-235B on Nebius, else an OpenAI mini model) |
+| `STUDIO_AI_MODELS` | no | Comma-separated models the Studio analyst may call (default: Qwen/Qwen3-30B-A3B-Instruct-2507 on Nebius, else an OpenAI mini model) |
+| `STUDIO_AI_MODEL` | no | Single-model override for the Studio analyst (used when `STUDIO_AI_MODELS` is empty) |
 | `NEXT_PUBLIC_AG_GRID_LICENSE_KEY` | no | AG Grid + AG Charts Enterprise. Without it a watermark is shown |
 | `NEXT_PUBLIC_AG_STUDIO_LICENSE_KEY` | no | AG Studio. Without it Studio runs in trial mode with a watermark |
 

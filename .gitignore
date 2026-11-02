@@ -20,7 +20,7 @@ next-env.d.ts
 pglite/
 
 # Stored webhook payloads (contain headers and buyer data) and logs
-events/
+tools/paypal-spikes/events/
 *.log
 logs/
 

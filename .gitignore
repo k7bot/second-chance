@@ -1,0 +1,30 @@
+# Secrets and local env (only the template is committed)
+.env*
+!.env.example
+*.pem
+*.key
+
+# Dependencies and builds
+node_modules/
+.next/
+out/
+build/
+.vercel/
+*.tsbuildinfo
+next-env.d.ts
+
+# Local databases
+.data/
+*.db
+*.sqlite
+pglite/
+
+# Stored webhook payloads (contain headers and buyer data) and logs
+events/
+*.log
+logs/
+
+# Scratch screenshot output (curated copies live in docs/screenshots)
+/shots/
+
+.DS_Store

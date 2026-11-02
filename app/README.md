@@ -1,0 +1,12 @@
+# Second Chance: app
+
+The Next.js app. See the [root README](../README.md) for what it does, setup, env vars and the demo walkthrough.
+
+```bash
+cp ../.env.example .env.local   # fill in values
+npm install && npm run dev
+```
+
+Screenshots: `node scripts/shots-grid.mjs http://localhost:3000 ../shots` (dashboard, grids, Studio) and `node scripts/shots.mjs` (store and save flow; it seeds practice members first).
+
+On Vercel, set Root Directory to `app`.

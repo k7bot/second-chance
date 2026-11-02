@@ -1,0 +1,43 @@
+{
+  "name": "app",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint"
+  },
+  "dependencies": {
+    "@electric-sql/pglite": "^0.5.14",
+    "@neondatabase/serverless": "^1.2.0",
+    "ag-charts-community": "^14.2.0",
+    "ag-charts-enterprise": "^14.2.0",
+    "ag-charts-react": "^14.2.0",
+    "ag-grid-community": "^36.2.0",
+    "ag-grid-enterprise": "^36.2.0",
+    "ag-grid-react": "^36.2.0",
+    "ag-studio": "^3.0.0",
+    "ag-studio-react": "^3.0.0",
+    "clsx": "^2.1.1",
+    "drizzle-orm": "^0.45.4",
+    "geist": "^1.9.0",
+    "lucide-react": "^1.66.0",
+    "next": "16.4.4",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@tailwindcss/turbopack": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "drizzle-kit": "^0.31.11",
+    "eslint": "^9",
+    "eslint-config-next": "16.4.4",
+    "playwright": "^1.64.1",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}

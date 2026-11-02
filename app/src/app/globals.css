@@ -1,0 +1,43 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --font-serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, ui-serif, serif;
+
+  --color-ink: #0f172a;
+  --color-ink-2: #334155;
+  --color-muted: #64748b;
+  --color-line: #e7e5e4;
+  --color-canvas: #f6f5f2;
+  --color-brand: #0f766e;     /* Second Chance teal */
+  --color-brand-2: #14b8a6;
+  --color-brand-soft: #e6f4f1;
+  --color-pp: #003087;        /* PayPal navy */
+  --color-pp-2: #0070e0;
+  --color-sun: #e8743b;       /* Brightside Yoga */
+  --color-sun-soft: #fdf0e6;
+  --color-cream: #fffaf4;
+}
+
+html, body { background: var(--color-canvas); color: var(--color-ink); }
+body { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
+::selection { background: #99f6e4; }
+
+@utility card { @apply rounded-2xl border border-line bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-12px_rgba(15,23,42,0.08)]; }
+@utility btn { @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none; }
+@utility btn-primary { @apply btn bg-ink text-white hover:bg-ink-2; }
+@utility btn-brand { @apply btn bg-brand text-white hover:bg-[#115e59]; }
+@utility btn-sun { @apply btn bg-sun text-white hover:bg-[#d4622b]; }
+@utility btn-ghost { @apply btn border border-line bg-white text-ink hover:bg-stone-50; }
+@utility btn-link { @apply text-sm font-medium text-muted underline-offset-4 hover:text-ink hover:underline; }
+@utility eyebrow { @apply text-[11px] font-semibold uppercase tracking-[0.14em] text-muted; }
+
+@keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.rise { animation: rise .45s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes pulse-dot { 0%,100% { opacity: 1 } 50% { opacity: .35 } }
+.live-dot { animation: pulse-dot 1.6s ease-in-out infinite; }
+
+/* AG Grid touches */
+.ag-row.sc-row-risk .ag-cell:first-child { box-shadow: inset 3px 0 0 #e11d48; }
+.ag-theme-params-1 .ag-row-group { font-weight: 600; }

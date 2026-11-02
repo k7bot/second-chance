@@ -1,0 +1,17 @@
+{
+  "name": "paypal-spikes",
+  "version": "1.0.0",
+  "description": "PayPal sandbox spikes and setup scripts for Second Chance",
+  "main": "lib.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "type": "commonjs",
+  "dependencies": {
+    "smee-client": "^5.0.0"
+  }
+}

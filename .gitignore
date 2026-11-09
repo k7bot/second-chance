@@ -28,3 +28,6 @@ logs/
 /shots/
 
 .DS_Store
+
+# Demo video renders and working files (binaries stay out of git)
+/video/

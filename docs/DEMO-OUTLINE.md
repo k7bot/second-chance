@@ -39,3 +39,18 @@ Rehearsal already exercised reset/seed/history/simulator/practice cancel with ap
 - `app/src/app/dashboard/demo/page.tsx`: cases, Via PayPal vs Replay, seed/history/reset.
 - `README.md` + [official rules](https://paypalaihackathon.devpost.com/rules): public YouTube ≤3 min target, public licensed repo, functional demo. Deadline Nov 12, 2026, 3 PM ET (target noon). Judging Dec 1–15 ET.
 - No narration script, fabricated metrics, publishing or submission in this file.
+
+## Recorded take — Nov 9, 2026 ET
+
+Final video: `video/second-chance-demo.mp4` (gitignored), **2:40**, 1920×1080 H.264/AAC, ElevenLabs voiceover. Final script and per-segment timestamps: `DEMO-NARRATION.md`. Tooling: `tools/demo-video/`.
+
+How the rehearsal issues were handled:
+
+- **Fold at 1280×800:** recorded at 1600×900 CSS (1.2× → 1920×1080), with eased scrolling to "See my options", "Cancel without an offer" and the decision panel.
+- **PayPal buttons blank in headless:** recorded in a *headed* Chromium under Xvfb; the Smart Buttons render and are hovered only (no checkout on screen).
+- **Cases 1/3/4 in the Outbox:** Suspended and Cancelled were fired Via PayPal before recording; Case 1 was fired Via PayPal on camera; all four messages (recovery, Maya's confirmation, win-back, come-back) are shown.
+- **Master/detail:** expanded fine in the headed browser (John Doe row: PayPal event timeline, offer history, member card).
+- **Sidebar badge:** not mentioned in the narration.
+- **Sample data:** said in narration on Overview and Studio, plus an on-screen caption on Overview, Offers and Studio.
+- **Waits:** the ~20 s webhook wait and the Studio AI wait are cut and captioned as such; the offer AI took ~3 s and is shown for ~1 s.
+- Demo data was reset + seeded + sample history reloaded after recording.

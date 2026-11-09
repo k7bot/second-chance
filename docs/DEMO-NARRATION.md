@@ -1,79 +1,32 @@
-# Demo narration script — target 2:50
+# Demo narration — final (recorded Nov 9, 2026 ET)
 
-Draft prepared Sunday, Nov 8, 2026 (ET) to match `DEMO-OUTLINE.md`. Say only what is on screen. Where the live offer or analyst reply is unknown, read the placeholder in brackets instead of inventing one. Do not claim saved-revenue numbers, inbox delivery, or a PayPal mutation that this pass did not show. Record in a normal browser (PayPal buttons can paint blank in headless capture). This script does not include setup, recording, publishing, or submission.
+Final voiceover for the 2:40 demo video (`video/second-chance-demo.mp4`, kept out of git). Recorded on the hosted app https://second-chance-k12-4d00.vercel.app (deploy `dpl_5xaUDpdM34ypDv4PcyxYZm8DiwK3`, commit `76dbe15`) in a headed Chromium under Xvfb at 1920×1080. Voice: ElevenLabs **"Jim F – Warm, Confident, Conversational"** (`eleven_v4`), generated one segment at a time so each segment could be timed to its screen recording.
 
-Base: https://second-chance-k12-4d00.vercel.app
+Rules this script follows: it says only what is on screen; "sandbox", "practice member" and "sample data" are said wherever they apply; no saved-revenue claims, no inbox-delivery claims, no PayPal mutation that the recording did not show. If you re-record, the live offer and analyst answer can differ, so re-check lines marked ⚠︎ against the new take.
 
-## 0:00–0:12 — Store (`/store`)
+| # | Video time | Screen | Narration |
+|---|---|---|---|
+| 0 | 0:00–0:06 | Title card | Second Chance is an AI retention agent for merchants who bill through PayPal Subscriptions. |
+| 1 | 0:06–0:19 | `/store` → pricing with PayPal buttons (caption: PayPal sandbox · no real money) | Our demo shop, Brightside Yoga, sells memberships with PayPal's subscribe buttons, running in the PayPal sandbox, so no real money moves. Now, a member who wants to leave. |
+| 2 | 0:19–0:59 | `/store/account` → Maya Chen → Cancel membership → Taking a break → hover "Cancel without an offer" → See my options → offer → decision panel → accept (caption: practice member) | Maya Chen is a practice member, so anyone can try this without a PayPal login, and nothing is charged. She picks Cancel membership, then Taking a break. She can still cancel without an offer. No traps. Second Chance asks Qwen, running on Nebius AI Studio, for one offer, and Maya gets a three-month pause. ⚠︎ The demo panel shows why: her signals, the model's reasoning, and the guardrails every offer must pass. On a real subscription, this calls PayPal's suspend API. Maya accepts, and her membership is paused until February seventh. ⚠︎ |
+| 3 | 0:59–1:19 | `/dashboard/demo` Case 1 **Via PayPal** → (≈20 s wait cut, captioned) → `/dashboard/events` | Cases one, three and four start from PayPal webhooks. In the demo console, I send a Payment failed event through PayPal's sandbox webhook simulator. About twenty seconds later, it lands: signature verified, and Second Chance has already written a recovery message with a seven-day grace period. |
+| 4 | 1:19–1:40 | `/dashboard/outbox`, scrolled through all four messages | The outbox holds every message. The recovery note for that failed payment: case one. Maya's pause confirmation. A win-back for a member who cancelled inside PayPal: case four. And a come-back offer after a suspension: case three. Simulator addresses stay outbox-only; real members get email. |
+| 5 | 1:40–1:53 | `/dashboard` (caption: includes SAMPLE data) | The merchant overview is built with AG Grid and AG Charts. Most of the history here is labelled sample data, a synthetic book of business, alongside the live sandbox events. |
+| 6 | 1:53–2:10 | `/dashboard/subscribers` → expand John Doe (master/detail) → `/dashboard/offers` pivot + integrated chart (caption: SAMPLE data) | In Subscribers, I can open a member to see their PayPal event timeline, the offer the AI wrote, and their plan. On Offers and revenue, a pivot of trigger by offer, linked to an integrated chart, shows which offers work for which churn signal. |
+| 7 | 2:10–2:30 | `/dashboard/studio` Sankey → Build · Ask AI → "Who should I call today?" starter (AI wait cut, captioned) → answer | The Studio is built on AG Studio, with a custom save-flow Sankey. I'll ask the AI analyst, also Qwen on Nebius, who to call today. It calls two tools, ranks the at-risk members, and says to prioritize John's payment recovery. ⚠︎ The save rates it quotes come from the sample history. |
+| 8 | 2:30–2:40 | Closing card with the hosted URL | Second Chance turns PayPal subscription events into one honest offer, applied through PayPal's own APIs. Try it at the link on screen. |
 
-This is Second Chance, an AI retention agent for merchants who bill through PayPal Subscriptions.
+## What was on screen in this take (for fact-checking)
 
-The demo shop is Brightside Yoga. These are sandbox subscribe buttons, not real charges. We will skip checkout and go straight to saving a member who wants to leave.
+- Maya's offer: "Take a breath, Maya", pause 3 months, $0 for 3 months; panel: Signals "taking break · member 14 months · Brightside Pro at $29", picked by **Qwen3-30B-A3B on Nebius AI Studio**, guardrails "price ≥ 40% of list, discounts ≤ 6 months, pauses ≤ 3 months, only cancel-page offer types", real-subscription call `POST /v1/billing/subscriptions/{id}/suspend`. Result: "Enjoy the break — paused until February 7."
+- Events: Payment failed (John Doe, PayPal simulator payload) **Signature verified** → "recovery message sent, grace until 2026-11-16"; the suspended/cancelled rows (Jordan Rivera) were fired Via PayPal off-camera before recording.
+- Outbox: four messages, all "Outbox only" (simulator / practice placeholder addresses): payment recovery (John), pause confirmation (Maya), win-back (Jordan, cancelled in PayPal), come-back (Jordan, suspended).
+- Studio answer (Qwen): tools `list_at_risk_members` and `retention_playbook`; top at-risk members John Doe, Jordan Rivera, Liam Walsh; "Prioritize John's recovery offer now". Its save-rate percentages come from the SAMPLE history.
 
-## 0:12–0:50 — Cancel flow (`/store/account` as Maya Chen)
+## Edits and captions
 
-Here is Maya Chen, a 14-month practice member. Practice mode lets judges try the save flow without a PayPal login, and it does not change a real sandbox subscription.
+- Waits trimmed on camera and captioned: the ~20 s PayPal webhook delivery wait ("Waited ~20 s off-camera for PayPal's signed webhook") and the Studio analyst wait ("AI wait trimmed"). The offer AI (~3 s) is trimmed to ~1 s of its "Finding the best option" state.
+- On-screen captions also mark "PayPal sandbox · no real money", "Practice member · no PayPal call, no real charge" and "Includes SAMPLE data: a labelled synthetic history".
+- No background music. No checkout was performed; the PayPal Smart Buttons render in the headed browser and are only hovered.
 
-Maya chooses Cancel membership, then Taking a break.
-
-Second Chance comes back with one offer, not a stack of popups. [Read the offer title, duration, and price shown on screen.]
-
-This demo panel shows what the model decided and why. [Read the engine or model, the reason, and the short rationale on screen. If the panel is missing, say so and keep going.]
-
-She can accept it, or she can Cancel without an offer, so this never traps her. [Point to Cancel without an offer. Do not click it. If you accept during a planned recording, describe only the result that actually appears, and do not call a practice accept a PayPal transaction.]
-
-## 0:50–1:10 — Demo console, case 1 (`/dashboard/demo`, then `/dashboard/events`)
-
-The other three cases start from real PayPal webhook events.
-
-In the demo console I fire a signed sandbox Payment failed event, through PayPal, not as a real failed charge.
-
-[Wait off-camera for the webhook if needed. Then on `/dashboard/events`:] Here is the event and its signature status. [Say the status shown, such as verified. If this row was only a local Replay, say that. Do not call a Replay a fresh signed PayPal round trip.]
-
-## 1:10–1:35 — Outbox (`/dashboard/outbox`)
-
-The outbox is the message log.
-
-This is the payment-recovery note from that failed payment, case 1. [Read a short line from the actual message.]
-
-This is the come-back note after a suspension, case 3.
-
-And this is the win-back note after someone cancels inside PayPal, case 4, with its approve link.
-
-[Mention the delivery status on screen. "Sent" means the email provider accepted it, not that we checked an inbox. Do not claim a recovery, reactivation, or new subscription happened just because a message exists.]
-
-Case 2 was Maya's cancel flow a moment ago.
-
-## 1:35–1:50 — Overview (`/dashboard`)
-
-This is the merchant overview: saves, offers, and who needs attention.
-
-[If sample history is visible, say it is labelled synthetic sample data, not live Brightside revenue. Do not read invented totals.]
-
-## 1:50–2:10 — Subscribers and offers (`/dashboard/subscribers`, then `/dashboard/offers`)
-
-On Subscribers I can open a member and see their PayPal event timeline and offer history. [Open one row and name what is actually in the detail.]
-
-[Show one grouping or saved view if it is already there.]
-
-On Offers and revenue, a pivot of trigger by offer shows which saves match which churn signal. [Describe the chart or measures that are visible. Do not add percentages that are not on screen.]
-
-## 2:10–2:40 — Studio (`/dashboard/studio`)
-
-Studio is the same book of business, with a Save-flow Sankey so you can see where people go after each offer.
-
-I will ask the AI analyst: Who should I call today?
-
-[When the answer arrives, read the actual recommendation and any tool-backed names on screen. If the analyst is unavailable or resting, say that. Do not present rules output as a live model reply.]
-
-## 2:40–2:50 — Close
-
-Second Chance watches PayPal subscription events, writes one honest offer, and applies it through PayPal's own APIs.
-
-You can try it at second-chance-k12-4d00.vercel.app. Thank you.
-
-## Recording notes
-
-- Aim to finish by 2:50 so there are about 10 seconds of margin under the 3-minute limit.
-- If a step fails, say what failed and move on. Do not patch it with a claim the screen does not support.
-- Setup such as resetting practice members or loading sample history is listed in `DEMO-OUTLINE.md` and needs approval before anyone clicks those controls.
+Rebuild: see `tools/demo-video/README.md`.

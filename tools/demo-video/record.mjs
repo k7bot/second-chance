@@ -156,7 +156,7 @@ await sleep(300); await page.evaluate(() => scrollTo(0, 0));
 cutEnd();
 await sleep(400);
 note("resultText", (await page.locator("body").innerText()).slice(0, 1200));
-await glide(700, 380); await sleep(4000);
+await glide(1240, 640, 1000); await sleep(4000); // park the cursor off the copy
 await stop();
 
 // ---------- S3 demo console: case 1 via PayPal, then signed event ----------
@@ -232,20 +232,30 @@ await go("/dashboard/studio"); await sleep(3500);
 await start("s7-studio");
 await sleep(1000);
 await glide(650, 400, 1100); await sleep(3500); // sankey
-await click(page.getByRole("button", { name: /Build · Ask AI/i })); await sleep(2500);
-await click(page.getByText(/Who should I call today\?/i).first()); await sleep(1500);
+await click(page.getByRole("button", { name: /Build · Ask AI/i })); await sleep(1500);
+// collapse the editor side panels so the dashboard KPIs keep their full width (no "…")
+for (const n of ["Data", "Compose", "Filters"]) await page.locator("button.ag-studio-panel-header").filter({ hasText: n }).first().click({ timeout: 5000 }).catch(() => {});
+await sleep(1200);
+const box = page.locator("textarea.ag-studio-ai-assistant-textarea");
+await click(box); await sleep(300);
+await page.keyboard.type("Who should I call today?", { delay: 85 }); await sleep(600);
+await page.keyboard.press("Enter"); await sleep(1500);
+note("t_asked", t());
 cutStart();
-let aiText = "";
+const chatText = () => page.evaluate(() => { const e = document.querySelector("[class*=ai-assistant]"); return e ? e.innerText : ""; });
+let aiText = "", prev = "", stable = 0;
 for (let i = 0; i < 60; i++) {
-  await sleep(2000);
-  aiText = await page.locator("body").innerText();
-  if (/Act now|Top \d|at-risk members by MRR/i.test(aiText) && i > 2) { await sleep(4000); break; }
+  await sleep(1500);
+  aiText = await chatText();
+  const busy = /Thinking/i.test(aiText) || (await page.getByRole("button", { name: /^Stop$/ }).count()) > 0;
+  stable = !busy && aiText === prev && aiText.length > 80 ? stable + 1 : 0; prev = aiText;
+  if (stable >= 2) break;
 }
+await page.mouse.move(cur.x, cur.y); await syncCur();
 cutEnd();
 note("aiText", aiText.slice(0, 2500));
-await moveTo(page.getByText(/AI Assistant/i).first(), { dy: 160, ms: 1000 }).catch(() => {}); await sleep(5000);
-await scrollEl(".ag-studio-ai-chat-messages, [class*='chat'] [class*='scroll']", 600, 1500).catch(() => {});
-await sleep(6000);
+note("kpiText", await page.evaluate(() => [...document.querySelectorAll("*")].filter((e) => e.children.length === 0 && /^\$[\d,]+$|^…$/.test(e.textContent.trim())).map((e) => e.textContent.trim()).slice(0, 4)));
+await glide(1500, 760, 1000); await sleep(9000);
 await stop();
 
 await browser.close();

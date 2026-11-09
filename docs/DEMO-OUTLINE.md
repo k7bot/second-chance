@@ -42,7 +42,7 @@ Rehearsal already exercised reset/seed/history/simulator/practice cancel with ap
 
 ## Recorded take — Nov 9, 2026 ET
 
-Final video: `video/second-chance-demo.mp4` (gitignored), **2:40**, 1920×1080 H.264/AAC, ElevenLabs voiceover. Final script and per-segment timestamps: `DEMO-NARRATION.md`. Tooling: `tools/demo-video/`.
+Final video: `video/second-chance-demo.mp4` (gitignored), **2:41** (v2), 1920×1080 H.264/AAC, ElevenLabs voiceover. Final script and per-segment timestamps: `DEMO-NARRATION.md`. Tooling: `tools/demo-video/`.
 
 How the rehearsal issues were handled:
 
@@ -52,5 +52,7 @@ How the rehearsal issues were handled:
 - **Master/detail:** expanded fine in the headed browser (John Doe row: PayPal event timeline, offer history, member card).
 - **Sidebar badge:** not mentioned in the narration.
 - **Sample data:** said in narration on Overview and Studio, plus an on-screen caption on Overview, Offers and Studio.
+- **Studio:** prompt typed on screen ("Who should I call today?") to match the narration; editor side panels collapsed so the KPIs are not truncated.
+- **Transitions:** 0.4 s crossfades between segments, no dips to black.
 - **Waits:** the ~20 s webhook wait and the Studio AI wait are cut and captioned as such; the offer AI took ~3 s and is shown for ~1 s.
 - Demo data was reset + seeded + sample history reloaded after recording.

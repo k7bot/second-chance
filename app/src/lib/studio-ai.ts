@@ -1,6 +1,6 @@
 // Server-side config for the AG Studio AI assistant. The LLM key never reaches the browser.
-const NEBIUS = "https://api.studio.nebius.com/v1";
-// Qwen3-235B-A22B-Instruct-2507 leaves Nebius serverless on 2026-11-09; this is its official replacement.
+// Official base URL (Nov 2026): https://docs.tokenfactory.nebius.com/switch
+const NEBIUS = "https://api.tokenfactory.nebius.com/v1";
 const NEBIUS_DEFAULT_MODEL = "Qwen/Qwen3-30B-A3B-Instruct-2507";
 
 export function studioAiModels(): string[] {
@@ -13,9 +13,9 @@ export function studioAiModels(): string[] {
   return [];
 }
 
-/** Which Responses-API endpoint and key to use: Nebius AI Studio first, then OpenAI. */
-export function studioAiUpstream(): { url: string; key: string; reasoning: boolean } | null {
-  if (process.env.NEBIUS_API_KEY) return { url: `${NEBIUS}/responses`, key: process.env.NEBIUS_API_KEY, reasoning: false };
-  if (process.env.OPENAI_API_KEY) return { url: "https://api.openai.com/v1/responses", key: process.env.OPENAI_API_KEY, reasoning: true };
+/** Which Responses-API endpoint and key to use: Nebius Token Factory first, then OpenAI. */
+export function studioAiUpstream(): { name: "nebius" | "openai"; url: string; key: string; reasoning: boolean } | null {
+  if (process.env.NEBIUS_API_KEY) return { name: "nebius", url: `${NEBIUS}/responses`, key: process.env.NEBIUS_API_KEY, reasoning: false };
+  if (process.env.OPENAI_API_KEY) return { name: "openai", url: "https://api.openai.com/v1/responses", key: process.env.OPENAI_API_KEY, reasoning: true };
   return null;
 }

@@ -1,6 +1,6 @@
 # Status
 
-_Last updated: Mon Nov 2, 2026 (ET). Development is paused; the app is feature-complete for the hackathon._
+_Last updated: Sun Nov 8, 2026 (ET). Work resumed; the app is feature-complete and submission preparation remains. Draft write-up and narration script are in DEVPOST.md and DEMO-NARRATION.md; both need review._
 
 **Deadline:** PayPal AI Hackathon, Thu Nov 12, 2026 at 3:00 PM ET. Target: submit by noon ET that day.
 
@@ -23,24 +23,32 @@ _Last updated: Mon Nov 2, 2026 (ET). Development is paused; the app is feature-c
 - **Abuse limits:** per-IP hourly and global daily caps for AI calls, demo actions and "Email this to me", stored in the Neon `rate_limits` table with salted IP hashes. Fails open. `Authorization: Bearer <CRON_SECRET>` skips the demo limits.
 - **Real email via Resend** from `offers@secondchance.heyremind.ai` (domain verified in Resend; DNS records in Namecheap for heyremind.ai; send-only key `second-chance-prod` scoped to that domain). Branded templates for all four cases plus confirmations; Outbox shows delivery status. "Email this to me" works for practice members. Live test sent Nov 2 (Resend accepted it; inbox placement not checked).
 - **Store and cancel-flow polish** (`c9f6270`): accessible reason picker, specific CTAs, **"Cancel without an offer"** (`POST /api/save/cancel`), a demo-only **"what Second Chance decided"** panel (model, offer and why) for practice members, access-until / paused-until states, contrast and focus fixes.
-- Daily AI-spend check routine is running (Nebius account has a $25 balance).
+- Daily AI-spend check routine was configured (Nebius balance last noted as $25; not freshly checked). Vercel plain-variable metadata checked Nov 7 ET confirms `LLM_DAILY_LIMIT=300` for production and preview; code default remains `1500`. No secrets were decrypted.
+
+## Fix log (Nov 9, 2026 ET)
+
+- **Studio Ask AI:** Nebius Qwen on `/v1/responses` accepted tool schemas but failed mid-stream with `Unable to process request…` whenever it needed to emit a `function_call`. Nebius documents function calling on Chat Completions. The `/api/ai/responses` proxy now bridges tool-bearing Nebius requests through `https://api.tokenfactory.nebius.com/v1/chat/completions` and re-emits Responses-shaped SSE for AG Studio. Plain (no-tools) Responses calls still go to `/v1/responses`. Offer engine chat.completions base URL updated to Token Factory as well.
 
 ## Remaining
 
 | When | Task |
 |---|---|
-| Before Nov 10 | Demo video, **under 3 minutes**, on **public YouTube** |
-| Before Nov 10 | Devpost write-up (problem, the 4 cases, PayPal APIs, AI, AG Grid/Studio, screenshots, hosted link) |
+| Before Nov 10 | Demo video, **under 3 minutes**, on **public YouTube**. Narration draft in [DEMO-NARRATION.md](DEMO-NARRATION.md); video not recorded |
+| Before Nov 10 | Devpost write-up (problem, the 4 cases, PayPal APIs, AI, AG Grid/Studio, screenshots, hosted link). Draft in [DEVPOST.md](DEVPOST.md); needs review |
 | Optional | Install the Vercel GitHub App on the repo so pushes deploy automatically (today deploys are manual archive uploads) |
 | ~Nov 10 | Final leaked-key check (`gitleaks` on full history) and **make the repo public, only with Kiran's OK** |
 | Nov 10 | **Feature freeze** |
 | Nov 11 | Buffer day (fixes only) |
 | Nov 12, by noon ET | **Submit** (hard deadline 3:00 PM ET) |
 
+## Submission rules and access window
+
+[Official rules](https://paypalaihackathon.devpost.com/rules) (saved locally as `/workspace/pp_rules.html`) require a functional demo or complete runnable setup, a public open-source repository with license, a feature/functionality description, and a publicly visible YouTube demo (aim under 3 minutes). Materials must be English or translated. Keep judge access free and available through Dec 15, 2026 ET. [Hackathon](https://paypalaihackathon.devpost.com/). Technical recording plan: [DEMO-OUTLINE.md](DEMO-OUTLINE.md).
+
 ## Known caveats
 
-- **Nebius serverless model retirement, Nov 9, 2026.** Qwen3-235B is already off the list; the app uses `Qwen/Qwen3-30B-A3B-Instruct-2507`. Re-check the model is still served after Nov 9. If it is not, set `LLM_MODEL` / `STUDIO_AI_MODEL` to a supported model; offers fall back to the rules engine on any error, so the demo keeps working either way.
-- **AG Grid Enterprise / AG Studio trial key** (30 days) expires **Dec 2, 2026**. After that a watermark appears; that is acceptable (judging ends before then).
+- **Nebius retirement checked Nov 7 ET:** the Nov 9 notice retires `Qwen/Qwen3-235B-A22B-Instruct-2507`, NOT our configured `Qwen/Qwen3-30B-A3B-Instruct-2507`; the latter is the official recommended replacement. No migration is currently indicated. [Official notice](https://docs.tokenfactory.nebius.com/november-2026-deprecation-notice). Offers retain their rules fallback; this is not a fresh live AI-call test.
+- **AG Grid Enterprise / AG Studio trial key** (30 days) expires **Dec 2, 2026**. This falls **during judging, Dec 1–15, 2026 ET**. Previous vendor confirmation says expiry adds a watermark without disabling functionality; that is historical confirmation, not independently verified post-expiry behavior. Re-check licensing/demo availability before judging.
 - **Stuck sandbox subscription `I-FT1VJ935P7LG`:** it stays SUSPENDED because an unconsented revise blocks `/activate` (`422 SESSION_STATE_NOT_VALID`). Harmless; don't use it in the demo.
 - **PayPal buttons render blank in headless screenshots** (the JS SDK iframe doesn't paint in headless Chromium). They work in a real browser; record the video in a normal browser.
 - Two leftover test offers (`off_mvzsv1bq1ghdr` Leo, `off_mvztn1643mjkf` Maya) are still "proposed". Harmless; a demo reset clears practice data.

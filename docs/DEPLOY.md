@@ -43,7 +43,7 @@ Set in Vercel → Project → Settings → Environment Variables (Production and
 | PayPal sandbox webhook | id `51164201KX432424G` → `https://second-chance-k12-4d00.vercel.app/api/paypal/webhook` (`tools/paypal-spikes/setup-webhook.js <url>` updates it in place) |
 | Vercel Cron | `/api/cron/resume`, `0 10 * * *` (10:00 UTC), from `app/vercel.json`; Vercel sends `Authorization: Bearer $CRON_SECRET` |
 | Neon | `DATABASE_URL`; tables auto-created on first request, demo seeded from the demo console |
-| Nebius AI Studio | `NEBIUS_API_KEY`, `LLM_PROVIDER=nebius`; base URL `https://api.studio.nebius.com/v1` |
+| Nebius AI Studio | `NEBIUS_API_KEY`, `LLM_PROVIDER=nebius`; base URL `https://api.tokenfactory.nebius.com/v1` (Studio tool calls are bridged through Chat Completions; see STATUS) |
 | Resend | Domain `secondchance.heyremind.ai` verified (DNS in Namecheap under heyremind.ai), send-only key `second-chance-prod`; `RESEND_API_KEY`, `EMAIL_FROM` |
 
 ## Switching to Git deploys (optional)

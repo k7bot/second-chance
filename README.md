@@ -196,7 +196,7 @@ See [`.env.example`](.env.example).
 | `STUDIO_AI_MODELS` | no | Comma-separated models the Studio analyst may call (default: Qwen/Qwen3-30B-A3B-Instruct-2507 on Nebius, else an OpenAI mini model) |
 | `STUDIO_AI_MODEL` | no | Single-model override for the Studio analyst (used when `STUDIO_AI_MODELS` is empty) |
 | `LLM_IP_HOURLY_LIMIT` | no | AI calls (offers, Studio analyst, grid AI) per visitor IP per hour, default `60`; over it offers quietly use the rules engine and the analyst says it is resting |
-| `LLM_DAILY_LIMIT` | no | AI calls per day across the app, default `1500` |
+| `LLM_DAILY_LIMIT` | no | AI calls per day across the app; code default `1500`, hosted production/preview override `300` (Vercel plain-variable metadata checked Nov 7, 2026 ET; no secrets decrypted) |
 | `DEMO_IP_HOURLY_LIMIT` | no | Demo console reset / practice members / sample history, per visitor IP per hour, default `10` |
 | `DEMO_PAYPAL_IP_HOURLY_LIMIT` | no | Simulator, import, reactivate and reconcile calls per visitor IP per hour, default `30` |
 | `DEMO_REAL_IP_HOURLY_LIMIT` / `DEMO_REAL_DAILY_LIMIT` | no | Suspend/cancel of real sandbox subscriptions: default `5` per visitor IP per hour and `20` per day; only subscriptions the console lists. `Authorization: Bearer $CRON_SECRET` skips the demo limits |
@@ -209,14 +209,14 @@ See [`.env.example`](.env.example).
 | `NEXT_PUBLIC_AG_STUDIO_LICENSE_KEY` | no | AG Studio. Without it Studio runs in trial mode with a watermark |
 | `PGLITE_DIR`, `SC_ENV_FILE` | no | Local only: PGlite data directory (default `app/.data/pglite`) and an alternate env file (default `../.env.sandbox`) |
 
-The hosted demo sets `NEXT_PUBLIC_AG_GRID_LICENSE_KEY` to a 30-day AG Grid Enterprise trial key that expires Dec 2, 2026; after that AG Grid and AG Studio show a watermark, which is fine for the demo. Never commit real values: secrets go into the Vercel UI only (see [docs/DEPLOY.md](docs/DEPLOY.md)).
+The hosted demo sets `NEXT_PUBLIC_AG_GRID_LICENSE_KEY` to a 30-day AG Grid Enterprise trial key that expires Dec 2, 2026; judging runs Dec 1–15, 2026 ET, so this expires during judging. Previous vendor confirmation says expiry is watermark-only, not a functionality cutoff; that is historical confirmation, not independently verified post-expiry behavior. Re-check before judging. Never commit real values: secrets go into the Vercel UI only (see [docs/DEPLOY.md](docs/DEPLOY.md)).
 
 ## Limits
 
 Light abuse protection (`app/src/lib/guard.ts`) keeps a public demo with a paid AI key and real email safe:
 
 - Fixed-window counters live in the Postgres `rate_limits` table, so they hold across serverless instances. Visitor IPs are stored only as salted SHA-256 hashes.
-- **AI:** 60 calls per visitor IP per hour and 1,500 per day across the app. Over the cap, offers quietly use the rules engine and the Studio analyst says it is resting.
+- **AI:** 60 calls per visitor IP per hour; code default 1,500 per day across the app, overridden to **300/day on hosted production and preview** (Vercel metadata verified Nov 7, 2026 ET, without decrypting secrets). Over the cap, offers quietly use the rules engine and the Studio analyst says it is resting.
 - **Demo console:** 10 resets/seeds per IP per hour, 30 PayPal simulator/import/reconcile calls per IP per hour, 5 real-subscription actions per IP per hour (20 per day).
 - **Email this to me:** 5 per IP per hour, 50 per day.
 - The limiter **fails open**: if the counter table errors, the request goes through. `Authorization: Bearer $CRON_SECRET` (the operator) skips the demo limits.

@@ -13,7 +13,7 @@ export function detectProvider(): Provider | null {
     custom: () => (e.LLM_API_KEY && e.LLM_BASE_URL ? { name: "custom", baseUrl: e.LLM_BASE_URL, model: e.LLM_MODEL || "gpt-4o-mini", key: e.LLM_API_KEY } : null),
     openai: () => (e.OPENAI_API_KEY ? { name: "openai", baseUrl: "https://api.openai.com/v1", model: e.LLM_MODEL || "gpt-4o-mini", key: e.OPENAI_API_KEY } : null),
     xai: () => (e.XAI_API_KEY ? { name: "xai", baseUrl: "https://api.x.ai/v1", model: e.LLM_MODEL || "grok-3-mini", key: e.XAI_API_KEY } : null),
-    nebius: () => (e.NEBIUS_API_KEY ? { name: "nebius", baseUrl: "https://api.studio.nebius.com/v1", model: e.LLM_MODEL || "Qwen/Qwen3-30B-A3B-Instruct-2507", key: e.NEBIUS_API_KEY } : null),
+    nebius: () => (e.NEBIUS_API_KEY ? { name: "nebius", baseUrl: "https://api.tokenfactory.nebius.com/v1", model: e.LLM_MODEL || "Qwen/Qwen3-30B-A3B-Instruct-2507", key: e.NEBIUS_API_KEY } : null),
   };
   if (choice) return table[choice]?.() ?? null;
   // auto: only keys that are explicitly meant for this app

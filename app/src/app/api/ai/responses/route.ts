@@ -1,9 +1,15 @@
 import { studioAiModels, studioAiUpstream } from "@/lib/studio-ai";
+import { nebiusToolsViaChatCompletions } from "@/lib/studio-ai-nebius-bridge";
 import { AI_RESTING, clientKey, llmBudget } from "@/lib/guard";
 
 // Proxy for AG Studio's Responses-API adapter (components/studio/openai-adapter.ts). The browser POSTs to
 // /api/ai/responses; this adds the server's key, pins the model to the allow-list, caps output and streams the
 // SSE reply straight back. The key is never logged or returned.
+//
+// Nebius note: Qwen on /v1/responses accepts `tools` in the request, but fails mid-stream with
+// "Unable to process request…" when it needs to emit a function_call. Nebius documents function
+// calling on Chat Completions, so tool-bearing Nebius requests are bridged there and re-emitted
+// as Responses-shaped SSE for the existing adapter.
 const MAX_OUTPUT_TOKENS = 8_000;
 const error = (status: number, message: string) => Response.json({ error: { message } }, { status });
 
@@ -41,6 +47,17 @@ export async function POST(request: Request) {
           return it;
         });
     }
+  }
+
+  const hasTools = Array.isArray(body.tools) && body.tools.length > 0;
+  if (upstream.name === "nebius" && hasTools) {
+    console.info("[studio-ai] Nebius tool request → chat.completions bridge");
+    return nebiusToolsViaChatCompletions({
+      key: upstream.key,
+      model,
+      body: { ...body, model, max_output_tokens: MAX_OUTPUT_TOKENS },
+      signal: request.signal,
+    });
   }
 
   const res = await fetch(upstream.url, {
